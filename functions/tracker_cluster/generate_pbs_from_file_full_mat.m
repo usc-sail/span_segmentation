@@ -28,7 +28,7 @@ while lineCount<lastLine
         [], templateFileName, outFileName,...
         coilSensitivityFile, hpcFolder, funFolder);
     
-    fprintf(fidout, 'qsub -A lc_sn %s/pbs; sleep 5\n',pbsCoreFolderName);
+    fprintf(fidout, 'qsub -A lc_sn %s/pbs\n',pbsCoreFolderName);
     
     lineCount = lineCount + 1;
     

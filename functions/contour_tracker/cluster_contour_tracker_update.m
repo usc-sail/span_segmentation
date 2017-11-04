@@ -1,4 +1,4 @@
-function trackdata = contour_tracker(videodata,template_struct,numIterations,coilIntensityCorrectionOn,coilSensitivityMatFileName,newtonMethodOn,contourCleanUpOn,plotOn,notifyOn, frames, parallelOn, workers)
+function trackdata = cluster_contour_tracker_update(videodata,template_struct,numIterations,coilIntensityCorrectionOn,coilSensitivityMatFileName,newtonMethodOn,contourCleanUpOn,plotOn,notifyOn, frames, parallelOn)
 
 N=size(videodata,1);
 
@@ -6,11 +6,16 @@ if isempty(frames)
     frames = 1:size(videodata,3);
 end;
 
-if notifyOn, fprintf('spanContourTracker - processing\n'); end
+%if notifyOn, 
+fprintf('spanContourTracker - processing\n'); 
+%end
 
 kMatrixFull2DFT = repmat(((-N/2):(N/2-1))/N,N,1); 
 kMatrixFull2DFT = kMatrixFull2DFT + 1i*(kMatrixFull2DFT.');
 wMatrixFull2DFT = ones(N,N)/(N^2);
+
+kMatrixFull2DFT_ = kMatrixFull2DFT(:);
+wMatrixFull2DFT_ = wMatrixFull2DFT(:);
 
 if coilIntensityCorrectionOn 
     load(coilSensitivityMatFileName,'magnitudeCoilSensMap'); 
@@ -19,13 +24,21 @@ else
 end
 
 if parallelOn
-    p=parpool('local');
-    addAttachedFiles(p,{'gridkb.m','calckbkernel.m','kb.m','ift.m','interpft2.m'});
+    videodata_reordered = videodata(:,:,frames);
+    %myCluster = parcluster('TorqueProfile1');
+    %myCluster.SubmitArguments = '-A lc_sn -l walltime=23:59:59';
+    %myCluster.NumWorkers=workers;
+    %myCluster.JobStorageLocation = pwd;
+    %p=parpool(myCluster,workers);
+    %p=parpool(myCluster);
+    %addAttachedFiles(p,{'gridkb.m','calckbkernel.m','kb.m','ift.m','interpft2.m'});
     parfor indframe=1:length(frames)
         
-        f = frames(indframe);
+        %f = frames(indframe);
         
-        img = videodata(:,:,f);
+        %fprintf('Starting frame %i of %i\n',f,length(frames));
+        
+        img = videodata_reordered(:,:,indframe);
         
         amax=max(max(img));
         amin=min(min(img));
@@ -41,7 +54,7 @@ if parallelOn
         
         %go back into spatial frequency domain
         fObserved = fftshift(fft2(fftshift(imObservedCorrected)));
-        fDataType = 'full2DFT';
+        %fDataType = 'full2DFT';
         
         %choose template
         
@@ -55,25 +68,24 @@ if parallelOn
                 model.segment{s}.v = model.segment{s}.v * N;
             end
             
-            
             %add other items to the model data structure
-            model.wMatrixSqrt = sqrt(wMatrixFull2DFT(:));
+            model.wMatrixSqrt = sqrt(wMatrixFull2DFT_);
             model.mBar        = fObserved(:) .* model.wMatrixSqrt; % TODO: THIS IS JUST DIVISION BY N
-            model.kMatrix     = kMatrixFull2DFT(:);
+            model.kMatrix     = kMatrixFull2DFT_;
             model.N           = N;
             model = updatePsiScore(model);
             model = updateMeanScore(model);
             model = updateGradient(model);
             
             %run the segmentation for the current image
-            [~, trackingScoreEvolution] = processOneImage(model,[10 20 19 1],newtonMethodOn,contourCleanUpOn,plotOn,notifyOn);
+            [~, trackingScoreEvolution] = processOneImage(model,[10 13 1 1],newtonMethodOn,contourCleanUpOn,plotOn,notifyOn);
             trackingScoreEvolutionArray(i)=trackingScoreEvolution(1,end);
             
         end;
         
         [~,indBest] = min(trackingScoreEvolutionArray);
         
-        fprintf('Frame: %i, Template: %i',f,indBest);
+        %fprintf('Frame: %i, Selected template: %i\n',f,indBest);
         
         model=template_struct(indBest).model;
         
@@ -105,16 +117,16 @@ if parallelOn
         %save the result
         
         trackdata{indframe}.contours = modelEvolution{5};
-        trackdata{indframe}.frameNo  = f;
+        trackdata{indframe}.frameNo  = frames(indframe);
         trackdata{indframe}.template = indBest;
         
-        
+        %fprintf('Frame: %i, done\n',f);
+            
     end
-    
-    
+                
     %delete(gcp('nocreate'));
-    delete(p);
-    
+    %delete(p);
+        
 else
     
     for indframe=1:length(frames)

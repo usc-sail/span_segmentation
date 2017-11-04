@@ -95,12 +95,12 @@ fclose(fid);
 % ]
 
 p1 = [...
-    1 1   1 1  3;...5;... %epiglottis used to be '0 10 0 0 5'
-    1 1   1 1  3;...3;... %tongue
-    1 1   0 1  3;...3;... %jaw bone
-    1 1   0 1  2;...3;... %lower lip; changed for experiment 02/2009 used to be  1 1 0 0 2 %% 1 1  0 0  2;
-    1 1   0 1  3;...10;... %chin
-    1 1   0 0  6;...10;... %neck front %was 20, EB 02/05/08
+    1 1   1 1  15;...5;... %epiglottis: 10 for normal subject
+    1 1   1 1  15;...3;... %tongue: 20 for normal subject
+    1 1   0 1  10;...3;... %jaw bone
+    1 1   0 1  10;...3;... %lower lip; changed for experiment 02/2009 used to be  1 1 0 0 2 %% 1 1  0 0  2;
+    1 1   0 1  15;...10;... %chin
+    1 1   0 0  10;...10;... %neck front %was 20, EB 02/05/08
     ]; 
 v1=[];
 i1=[];
@@ -112,10 +112,10 @@ v1 = v1/frameWidth;% - .5;
 v1(:,2) =  v1(:,2);% + 1; 
 
 p2 = [...
-      1 1 0 1   3;...5;... %pharyngeal wall %was 10, EB 02/05/08
-      0 0 0 1   6;...10;... %border w/ brain
-      0 0 0 0   6;...20;... %neck back %%50
-      0 0 0 0   6;...20;... %border w/ lungs
+      1 1 0 1   30;...5;... %pharyngeal wall %was 10, EB 02/05/08
+      0 0 0 1   20;...10;... %border w/ brain
+      0 0 0 0   10;...20;... %neck back %%50
+      0 0 0 0   5;...20;... %border w/ lungs
     ];
 v2=[];
 i2=[];
@@ -127,11 +127,11 @@ v2 = v2/frameWidth;% - .5;
 v2(:,2) =  v2(:,2);% + 1; 
 
 p3 = [...
-      0  0  0 0  3;...%5;... %hard palate
-      0  10 0 1  3;...5;... %velum used to be '0 50 0 0 5'
-      0  0  0 1  6;...5;... %border in nasal cavity upper lip; changed from 40 to 20 on 01/06/2009 EB %% 1 1 0 0 20
-      0  0  0 0  6;...5;... %nose     %% 1 1 0 0 20
-      0  1  0 1  3;...3;... %upper lip 1  1 0 0  2;
+      0  0  0 0  10;...%5;... %hard palate
+      0  10 0 1  15;...5;... %velum used to be '0 50 0 0 5'
+      0  0  0 1  15;...5;... %border in nasal cavity upper lip; changed from 40 to 20 on 01/06/2009 EB %% 1 1 0 0 20
+      0  0  0 0  10;...5;... %nose     %% 1 1 0 0 20
+      0  1  0 1  10;...3;... %upper lip 1  1 0 0  2;
     ]; 
 v3=[];
 i3=[];
@@ -197,37 +197,8 @@ for s=1:(size(model.segment,2)-1)
     vConcat = [];
     for sId=1:max(sectionsId)
         vSection = v(sectionsId==sId,:);
-        ldesired     = sectionsParameters(sId,5)/mriScale;
-        
-        %compute all edges' lengths
-        vtemp = vSection;
-        vtemp = [vtemp ; vtemp(1,:)];
-        ltemp = diff(vtemp,1,1); ltemp = ltemp.^2; ltemp = sum(ltemp,2); ltemp = sqrt(ltemp);
-        %insert / delete vertices if necessary
-        vtemp = vSection;
-        itemp = model.segment{s}.i;
-        vnew = []; vnew(1,:) = vtemp(1,:); vtemp = vtemp(2:end,:);
-        inew = []; inew(1)   = itemp(1);   itemp = itemp(2:end);
-        while size(vtemp,1)>0
-            if ltemp(1) < ldesired/2
-                %delete segment
-                vtemp = vtemp(2:end,:);
-                itemp = itemp(2:end);
-                ltemp(2) = ltemp(2) + ltemp(1); ltemp = ltemp(2:end,:);
-            elseif ltemp(1) > ldesired*2
-                %split segment
-                vtemp = [(vnew(end,:) + vtemp(1,:))/2 ; vtemp];
-                itemp = [inew(end)                    ; itemp];
-                ltemp = [ltemp(1,:)/2 ; ltemp(1,:)/2 ; ltemp(2:end,:)];
-            else
-                %keep segment as is
-                vnew = [vnew ; vtemp(1,:)];
-                vtemp = vtemp(2:end,:);
-                inew = [inew ; itemp(1)];
-                itemp = itemp(2:end);
-                ltemp = ltemp(2:end,:);                
-            end
-        end
+        ndesired     = sectionsParameters(sId,5);
+        vnew = InterpolateContourPoints2D(vSection,ndesired)
         vConcat = [vConcat ; vnew];
         iConcat = [iConcat ; sId * ones(size(vnew,1),1)];
     end

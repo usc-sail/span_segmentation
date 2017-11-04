@@ -41,8 +41,8 @@ O=P;
 dis=[0;cumsum(sqrt(sum((O(2:end,:)-O(1:end-1,:)).^2,2)))];
 
 % Resample to make uniform points
-K(:,1) = interp1(dis,O(:,1),linspace(0,dis(end),nPoints*2));
-K(:,2) = interp1(dis,O(:,2),linspace(0,dis(end),nPoints*2));
+K(:,1) = interp1(dis,O(:,1),linspace(0,dis(end),nPoints));
+K(:,2) = interp1(dis,O(:,2),linspace(0,dis(end),nPoints));
 %K=K(round(end/4):round(end/4)+nPoints-1,:);
 
  

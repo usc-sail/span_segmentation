@@ -8,7 +8,7 @@ function varargout = make_template(varargin)
 % Two files {outputfile}.trk and {outputfile}.mat will be created
 %
 % Asterios Toutios 17-Sep-2014
-% Last Modified by GUIDE v2.5 21-Dec-2016 10:11:46
+% Last Modified by GUIDE v2.5 12-Dec-2016 10:57:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -48,26 +48,24 @@ handles.template_struct_filename=varargin{1};
 
 
 if ~isempty(varargin{3})
-    coilSensitivityMatFileName=varargin{3};
+    coilSensitivityMatFileName=varargin{2};
     load(coilSensitivityMatFileName,'magnitudeCoilSensMap');
 end;
 
 % Update handles structure
 guidata(hObject, handles);
 
-%videoData = varargin{1};
-
-
-
-%set(handles.slider1,'Max',nFrames);
-%set(handles.slider1,'Min',1);
-
-videoData=varargin{2}.frames;
+videoData = varargin{1};
 nFrames = size(videoData,3);
 
 if ~isempty(varargin{3})
     videoData=videoData./repmat(magnitudeCoilSensMap,1,1,nFrames);
 end;
+
+%set(handles.slider1,'Max',nFrames);
+%set(handles.slider1,'Min',1);
+
+videoData=varargin{2}.frames;
 
 handles.videoData=videoData;
 handles.nFrames=size(handles.videoData,3);
@@ -103,20 +101,27 @@ load(handles.template_struct_filename,'template_struct');
 handles.itemplate=1;
 template=template_struct(handles.itemplate).template;
 handles.template_struct=template_struct;
-handles.numberOfTemplates=size(template_struct,2);
+
+% icurve=0;
+% for isegment=1:3
+%     for iv = 1:max(template.segment{1,isegment}.i);
+%         icurve=icurve+1;
+%         handles.curves(icurve).position=template.segment{1,isegment}.v(template.segment{1,isegment}.i==iv,:);
+%         handles.curves(icurve).position=handles.imagewidth*handles.curves(icurve).position;
+%         handles.curves(icurve).position(:,2)=-handles.curves(icurve).position(:,2)
+%     end
+% end;
 
 for i=1:15
     handles.curves(i).position=template.curves(i).position;
 end;
 
-%refresh_plot(handles)
-
+%image((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),handles.MRI);
 imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
 colormap(gray); axis image; axis off;
 hold on;
 
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 
 for i=1:length(handles.curves)
     if ~isempty(handles.curves(i).position)
@@ -125,6 +130,11 @@ for i=1:length(handles.curves)
 end;
 
 guidata(hObject, handles);
+
+%h=impoly;
+%position=wait(h);
+%
+%handles.h=h;
 
 
 % UIWAIT makes make_template wait for user response (see UIRESUME)
@@ -172,8 +182,7 @@ imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.
 colormap(gray); axis image; axis off;
 hold on;
 
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 
 for i=setdiff(1:length(handles.curves),selected_curve)
     if ~isempty(handles.curves(i).position)
@@ -208,8 +217,7 @@ imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.
 colormap(gray); axis image; axis off;
 hold on;
 
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 
 for i=1:length(handles.curves)
     if ~isempty(handles.curves(i).position)
@@ -219,42 +227,45 @@ end;
 
 hold off;
 
-% --- Executes on button press in mri_add_template.
-function mri_add_template_Callback(hObject, eventdata, handles)
-% hObject    handle to mri_add_template (see GCBO)
+% --- Executes on button press in mri_save_template.
+function mri_save_template_Callback(hObject, eventdata, handles)
+% hObject    handle to mri_save_template (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.template_struct(handles.numberOfTemplates+1).template.curves = handles.curves;
-handles.template_struct(handles.numberOfTemplates+1).template.MRI = handles.MRI;
-
-handles.itemplate = handles.numberOfTemplates+1;
-handles.numberOfTemplates = handles.numberOfTemplates+1;
-
-% template=handles.template_struct(handles.itemplate).template;
-% handles.template_struct=template_struct;
-% handles.numberOfTemplates=size(template_struct,2);
-% 
-% for i=1:15
-%     handles.curves(i).position=template.curves(i).position;
-% end;
-
-%refresh_plot(handles)
-
-imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
+fid = fopen([handles.outfilename,'.trk'],'w');
+for i=1:15
+    
     if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
+        
+        ctrx=handles.curves(i).position(:,1);
+        ctry=handles.curves(i).position(:,2);
+        
+        fprintf(fid,'im1\n');
+        fprintf(fid,'c%i\n\n',i);
+        for j=1:length(ctrx)
+            fprintf(fid,'%6.3f,%6.3f\n',ctrx(j),-ctry(j));
+        end;
+        fprintf(fid,'\n');
+        
     end;
+    
 end;
 
+fclose(fid);
+
+template=struct('curves',[],'MRI',[]);
+
+template.curves = handles.curves;
+template.MRI = handles.MRI;
+
+save([handles.outfilename,'.mat'],'template');
+
+switch_convert_template([handles.outfilename,'_converted.mat'],[handles.outfilename,'.trk'],1,handles.imagewidth,133,1);
+
 guidata(hObject, handles);
+
+close(handles.thisgui);
 
 
 % --- Executes on selection change in curve_selection.
@@ -295,8 +306,7 @@ guidata(hObject, handles);
 imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),handles.MRI);
 colormap(gray); axis image; axis off;
 hold on;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 
 for i=1:length(handles.curves)
     if ~isempty(handles.curves(i).position)
@@ -321,8 +331,7 @@ handles.frame=frame;
 MRI=mat2gray(handles.videoData(:,:,frame),[handles.amin handles.amax]);
 imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),MRI);
 colormap(gray); axis image; axis off; hold on;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 handles.MRI=MRI;
 % for i=1:15
 %     handles.curves(i).position=[];
@@ -361,8 +370,7 @@ handles.frame=frame;
 MRI=mat2gray(handles.videoData(:,:,frame),[handles.amin handles.amax]);
 imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),MRI);
 colormap(gray); axis image; axis off; hold on;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 handles.MRI=MRI;
 % for i=1:15
 %     handles.curves(i).position=[];
@@ -398,8 +406,7 @@ handles.frame=frame;
 MRI=mat2gray(handles.videoData(:,:,frame),[handles.amin handles.amax]);
 imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),MRI);
 colormap(gray); axis image; axis off; hold on;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 handles.MRI=MRI;
 % for i=1:15
 %     handles.curves(i).position=[];
@@ -423,8 +430,7 @@ handles.frame=frame;
 MRI=mat2gray(handles.videoData(:,:,frame),[handles.amin handles.amax]);
 imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),MRI);
 colormap(gray); axis image; axis off; hold on;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 handles.MRI=MRI;
 % for i=1:15
 %     handles.curves(i).position=[];
@@ -450,6 +456,18 @@ handles.itemplate=str2double(get(hObject,'String'));
 
 template=handles.template_struct(handles.itemplate).template;
 
+% icurve=0;
+% for isegment=1:3
+%     for iv = 1:max(template.segment{1,isegment}.i);
+%         icurve=icurve+1;
+%         handles.curves(icurve).position=template.segment{1,isegment}.v(template.segment{1,isegment}.i==iv,:);
+%         handles.curves(icurve).position=handles.imagewidth*handles.curves(icurve).position;
+%         handles.curves(icurve).position(:,2)=-handles.curves(icurve).position(:,2)
+%     end
+% end;
+
+%image((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),handles.MRI);
+
 if ~isempty(template)
     imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
     colormap(gray); axis image; axis off;
@@ -460,10 +478,19 @@ if ~isempty(template)
     end;
     handles.template=template;
 end;
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
+text(-0.8*handles.axislimit,0.8*handles.axislimit,num2str(handles.frame),'Color','white','FontSize',24);
 
 guidata(hObject, handles);
+
+% imagesc((-handles.axislimit):(handles.axislimit), (-handles.axislimit):(handles.axislimit),handles.MRI);
+% colormap(gray); axis image; axis off;
+% hold on;
+% 
+% for i=1:length(handles.curves)
+%     if ~isempty(handles.curves(i).position)
+%         plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
+%     end;
+% end;
 
 % --- Executes during object creation, after setting all properties.
 function template_number_CreateFcn(hObject, eventdata, handles)
@@ -483,193 +510,3 @@ function exit_Callback(hObject, eventdata, handles)
 % hObject    handle to exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-    
-template_struct=struct([]);
-
-for itmp = 1:handles.numberOfTemplates
-    
-    template=handles.template_struct(itmp).template;
-
-    fid = fopen('tmp.trk','w');
-    for i=1:15
-        
-        if ~isempty(handles.curves(i).position)
-            
-            ctrx=template.curves(i).position(:,1);
-            ctry=template.curves(i).position(:,2);
-            
-            fprintf(fid,'im1\n');
-            fprintf(fid,'c%i\n\n',i);
-            for j=1:length(ctrx)
-                fprintf(fid,'%6.3f,%6.3f\n',ctrx(j),-ctry(j));
-            end;
-            fprintf(fid,'\n');
-            
-        end;
-        
-    end;
-    
-    fclose(fid);
-    
-    convert_template('tmp_converted.mat','tmp.trk',1,handles.imagewidth,133,1);
-    
-    pause(3);
-    
-    load('tmp_converted.mat','model');
-
-    template_struct(itmp).model = model;
-
-    
-end;
-
-save('template_struct_converted.mat','template_struct');
-
-handles.template_struct_filename
-
-template_struct = handles.template_struct;
-save(handles.template_struct_filename,'template_struct');
-
-guidata(hObject, handles);
-
-close(handles.thisgui);
-
-
-% --- Executes on button press in previous_template.
-function previous_template_Callback(hObject, eventdata, handles)
-% hObject    handle to previous_template (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-handles.itemplate = max(handles.itemplate-1,1);
-
-template=handles.template_struct(handles.itemplate).template;
-% handles.template_struct=template_struct;
-% handles.numberOfTemplates=size(template_struct,2);
-
-for i=1:15
-    handles.curves(i).position=template.curves(i).position;
-end;
-
-%refresh_plot(handles)
-
-imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
-    if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
-    end;
-end;
-
-guidata(hObject, handles);
-
-
-% --- Executes on button press in next_template.
-function next_template_Callback(hObject, eventdata, handles)
-% hObject    handle to next_template (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.itemplate = min(handles.itemplate+1,handles.numberOfTemplates);
-
-template=handles.template_struct(handles.itemplate).template;
-%handles.template_struct=template_struct;
-%handles.numberOfTemplates=size(template_struct,2);
-
-for i=1:15
-    handles.curves(i).position=template.curves(i).position;
-end;
-
-%refresh_plot(handles)
-
-imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
-    if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
-    end;
-end;
-
-guidata(hObject, handles);
-
-
-% --- Executes on button press in delete_template.
-function delete_template_Callback(hObject, eventdata, handles)
-% hObject    handle to delete_template (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if handles.numberOfTemplates > 1
-    
-    handles.template_struct(handles.itemplate) = [];
-    handles.numberOfTemplates = handles.numberOfTemplates-1;
-    
-    imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
-    if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
-    end;
-end;
-
-    
-else
-    
-    disp('There only one template. Please edit it instead of deleting!');
-    
-end;
-
-
-guidata(hObject, handles);
-
-% --- Executes on button press in replace_template.
-function replace_template_Callback(hObject, eventdata, handles)
-% hObject    handle to replace_template (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-handles.template_struct(handles.itemplate).template.curves = handles.curves;
-handles.template_struct(handles.itemplate).template.MRI = handles.MRI;
-
-imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
-    if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
-    end;
-end;
-
-guidata(hObject, handles);
-
-function refresh_plot(handles)
-
-imagesc(handles.MRI, 'XData', [-handles.axislimit handles.axislimit], 'YData', [-handles.axislimit handles.axislimit])
-colormap(gray); axis image; axis off;
-hold on;
-
-s=sprintf('Frame %i \n%i ms\nTemplate %i of %i',handles.frame, round(handles.frame/handles.framerate*1000),handles.itemplate, handles.numberOfTemplates);
-text(-0.9*handles.axislimit,0.8*handles.axislimit,s,'Color','yellow','FontSize',24);
-
-for i=1:length(handles.curves)
-    if ~isempty(handles.curves(i).position)
-        plot(handles.curves(i).position(:,1),handles.curves(i).position(:,2),'r','LineWidth',2);
-    end;
-end;

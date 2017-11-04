@@ -49,7 +49,7 @@ handles.outfilename=varargin{3};
 handles.framerate=varargin{4};
 
 if ~isempty(varargin{5})
-    coilSensitivityMatFileName=varargin{4};
+    coilSensitivityMatFileName=varargin{5};
     load(coilSensitivityMatFileName,'magnitudeCoilSensMap');
 end;
 
