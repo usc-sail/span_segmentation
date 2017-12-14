@@ -1,39 +1,35 @@
-addpath(genpath('functions'))
+addpath(genpath(fullfile(pwd,'functions')));
 
-pbsBaseFolderName=fullfile(cd,'cluster');
+pbsBaseFolderName='../cluster';
 % This is the folder on your local computer where the files to upload to the cluster will be put
 
-hpcFolder='/home/rcf-proj2/tjs/tanner';
+hpcFolder='/home/rcf-proj2/tjs/tsorense';
 % This is the folder on the cluster where you will upload the data (make
 % sure you have access to that folder)
 
 mkdir(pbsBaseFolderName);
-segmentFile = 'demo_files/segments_ms.csv';
+segmentFile = '../manual_annotations/timestamps.csv';
 % Your .csv file
-% For converting from frames to ms:
-% tab = readtable('../csv/at1_rep.csv','Delimiter',','), tab.Var3 = tab.Var3*1000/frameRate; tab.Var4 = tab.Var4*1000/frameRate; writetable(tab,'../csv/at1_rep.csv')
-
 firstLine = 2;
-lastLine = 50;
+lastLine = 13;
 % The first and last lines of the part of the .csv file you need to work
 % for this experiment
 
-templateFileName = 'template_struct_converted.mat';
-% This is the output of wrap_template_batch.m
-
+templateFileName = '../template_struct_converted.mat';
 coilSensitivityFile = [];
 
-frameRate = 83.2778;
+frameRate = 83.33;
 % You can find this as videostruct.framerate from previous steps of the
 % process
 
-scriptName = 'demo';
+scriptName = 'do_segmentation';
 % This is just the name of the shell script that will be created
 
-account = 'lc_tjs';
-% This is the account whose core hours will be used.
+funFolder = fullfile(pwd,'functions/contour_tracker');
+% Location when the contour_tracker functions are stored
 
-generate_pbs_from_file(pbsBaseFolderName, scriptName, segmentFile, firstLine, lastLine, frameRate, templateFileName, coilSensitivityFile, hpcFolder, account)
+%generate_pbs_from_file_full_mat(pbsBaseFolderName, scriptName, segmentFile, firstLine, lastLine, frameRate, templateFileName, coilSensitivityFile, hpcFolder, funFolder)
+cluster_generate_scripts(pbsBaseFolderName, scriptName, segmentFile, firstLine, lastLine, frameRate, templateFileName, coilSensitivityFile, hpcFolder, funFolder)
 
 % OK. Now go to <pbsBaseFolderName>, upload everything from there to
 % hpc-transfer.usc.edu
