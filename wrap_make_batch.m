@@ -1,6 +1,6 @@
 addpath(genpath(fullfile(pwd,'functions')));
 
-pbsBaseFolderName='../cluster';
+pbsBaseFolderName='./cluster';
 % This is the folder on your local computer where the files to upload to the cluster will be put
 
 hpcFolder='/home/rcf-proj2/tjs/tsorense';
@@ -8,17 +8,17 @@ hpcFolder='/home/rcf-proj2/tjs/tsorense';
 % sure you have access to that folder)
 
 mkdir(pbsBaseFolderName);
-segmentFile = '../manual_annotations/timestamps.csv';
+segmentFile = './demo_files/segments_ms.csv';
 % Your .csv file
 firstLine = 2;
-lastLine = 13;
+lastLine = 3;
 % The first and last lines of the part of the .csv file you need to work
 % for this experiment
 
-templateFileName = '../template_struct_converted.mat';
+templateFileName = './template_struct_converted.mat';
 coilSensitivityFile = [];
 
-frameRate = 83.33;
+frameRate = 83.2778;
 % You can find this as videostruct.framerate from previous steps of the
 % process
 

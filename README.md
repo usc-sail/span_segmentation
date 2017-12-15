@@ -15,4 +15,4 @@ Usage instructions:
   - When you are all done with your templates, click `convert and exit`.
 2. Run `wrap_make_batch.m` to generate the files to be run on the USC HPC Cluster (https://hpcc.usc.edu/). These files appear in the folder `cluster`.
 3. Copy `cluster` to the directory on the USC HPC cluster whose path you set in the string variable `hpcFolder` in the script `wrap_make_batch.m`.
-4. On the cluster, change permissions so that the Bash shell script whose name you set in the string variable `scriptName` in the script `wrap_make_batch.m` is executable. Then execute the script to submit the jobs to the queue.
+4. On the cluster, run the MATLAB script using the command `source /usr/usc/matlab/default/setup.sh; matlab`. This is best done using `screen`. If this is the first time using parallel MATLAB on the cluster, configure Parallel MATLAB and the Distributed Computing Server Toolbox using the instructions in the file `Parallel Matlab on HPC Cluster.docx`.
